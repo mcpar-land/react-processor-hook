@@ -7,6 +7,7 @@ Once all steps are complete, the final result will be reflected in `output`.
 
 ```JSX
 import React from 'react';
+import { useProcessor } from 'react-processor-hook';
 
 const TweetLoader = (props) => {
 
