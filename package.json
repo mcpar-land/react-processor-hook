@@ -1,8 +1,10 @@
 {
   "name": "react-processor-hook",
-	"types": "lib/index.d.ts",
-	"files": ["lib/**/*"],
-  "version": "1.0.0",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/**/*"
+  ],
+  "version": "1.0.1",
   "description": "A React hook for step-based asynchronous data processing.",
   "main": "lib/index.js",
   "dependencies": {
@@ -22,20 +24,20 @@
     "typescript": "^3.6.4"
   },
   "scripts": {
-		"prepare": "npm run build",
-		"prepublishOnly": "npm test",
-		"version": "git add -A src",
-		"postversion": "git push && git push --tags",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test",
+    "version": "git add -A src",
+    "postversion": "git push && git push --tags",
     "test": "mocha",
     "build": "tsc"
   },
   "keywords": [
     "react"
-	],
-	"repository": {
-		"type" : "git",
-		"url": "git+https://github.com/mcpar-land/react-processor-hook.git"
-	},
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mcpar-land/react-processor-hook.git"
+  },
   "author": "mcpar-land",
   "license": "ISC"
 }
