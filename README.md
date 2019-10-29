@@ -1,4 +1,4 @@
-# `react-use-processor`
+# `react-processor-hook`
 
 `useProcessor` is a React hook for processing data in steps, and exposing the currently calculating step as a state.
 
