@@ -1,59 +1,133 @@
-import 'jsdom-global/register';
 import React from 'react';
 import { expect } from 'chai';
-import Enzyme, { mount, shallow, ReactWrapper } from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
+import { HookResult, renderHook, act } from '@testing-library/react-hooks';
 import {
 	StepArray,
 	ProcessorState,
 	useProcessor
 } from '.';
 
-Enzyme.configure({ adapter: new Adapter() });
-
-const DummyComponent = (props: {input: any, processors: StepArray}) => {
-	const [
-		output,
-		complete,
-		error,
-		step,
-		stepIndex
-	] = useProcessor(props.input, props.processors);
-	return (<div>
-		{ complete ? output.toString() : "Loading..." }
-	</div>);
-};
-
-const mountWithProcessors = (input: any, processors: StepArray) => {
-	return mount(<DummyComponent input={input} processors={processors} />);
-}
-
-const pause = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
-
 describe("useProcessor", () => {
-	it("renders", () => {
-		mountWithProcessors("", []);
-	});
 
-	it("shows loading initially", () => {
-		const c = mountWithProcessors("", []);
-		expect(c.text()).to.equal("Loading...");
-	});
+	let result: HookResult<ProcessorState>;
+	let waitForNextUpdate: () => Promise<void>;
 
-	it("should run steps", async () => {
-		const c = mountWithProcessors("frog", [
-			["Kissing frog", async frog => {
+	const loadHook = (processors: StepArray, input?: any) => {
+		const r = renderHook(() => useProcessor(processors, input));
+		result = r.result;
+		waitForNextUpdate = r.waitForNextUpdate
+	}
+
+	const pause = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+	const R_PAUSE = 300;
+
+	it('should run', async () => {
+		loadHook([
+			["kiss frog", async frog => {
+				await pause(R_PAUSE);
 				return "kissed frog"
 			}],
-			["Turning frog to prince", async frog => {
+			["turn frog into prince", async frog => {
+				await pause(R_PAUSE);
 				return "prince"
 			}],
-			["Marrying prince", async prince => {
-				return "married prince";
+			["marry prince", async prince => {
+				await pause(R_PAUSE);
+				return "married prince"
+			}],
+			["divorce prince", async prince => {
+				await pause(R_PAUSE);
+				return "divorced prince"
 			}]
 		]);
-		expect(c.text()).to.equal("Loading...");
-		c.update();
-		expect(c.text()).to.equal("prince");
+		
+		expect(result.current.stepIndex).to.equal(0);
+		expect(result.current.step).to.equal("kiss frog");
+		expect(result.current.complete).to.equal(false);
+		await waitForNextUpdate();
+		expect(result.current.stepIndex).to.equal(1);
+		expect(result.current.step).to.equal("turn frog into prince");
+		expect(result.current.complete).to.equal(false);
+		await waitForNextUpdate();
+		expect(result.current.stepIndex).to.equal(2);
+		expect(result.current.step).to.equal("marry prince");
+		expect(result.current.complete).to.equal(false);
+		await waitForNextUpdate();
+		expect(result.current.stepIndex).to.equal(3);
+		expect(result.current.step).to.equal("divorce prince");
+		expect(result.current.complete).to.equal(false);
+		await waitForNextUpdate();
+		expect(result.current.stepIndex).to.equal(3);
+		expect(result.current.step).to.equal("divorce prince");
+		expect(result.current.complete).to.equal(true);
+	});
+
+	it("should stop at any error", async () => {
+
+		loadHook([
+			["kiss frog", async frog => {
+				await pause(R_PAUSE);
+				return "kissed frog"
+			}],
+			["turn frog into prince", async frog => {
+				await pause(R_PAUSE);
+				return "prince"
+			}],
+			["marry prince", async prince => {
+				await pause(R_PAUSE);
+				throw new Error("prince already married");
+				return "married prince"
+			}],
+			["divorce prince", async prince => {
+				await pause(R_PAUSE);
+				return "divorced prince"
+			}]
+		]);
+
+		expect(result.current.stepIndex).to.equal(0);
+		expect(result.current.step).to.equal("kiss frog");
+		expect(result.current.complete).to.equal(false);
+		await waitForNextUpdate();
+		expect(result.current.stepIndex).to.equal(1);
+		expect(result.current.step).to.equal("turn frog into prince");
+		expect(result.current.complete).to.equal(false);
+		await waitForNextUpdate();
+		expect(result.current.stepIndex).to.equal(2);
+		expect(result.current.step).to.equal("marry prince");
+		expect(result.current.complete).to.equal(false);
+		await waitForNextUpdate();
+		expect(result.current.stepIndex).to.equal(2);
+		expect(result.current.step).to.equal("marry prince");
+		expect(result.current.complete).to.equal(true);
+		expect((result.current.error as Error).message)
+			.to.equal("prince already married");
+		
+	});
+
+	it("should work with large data", async () => {
+		const NUM_FROGS = 200000;
+		loadHook([
+			[`create ${NUM_FROGS} frogs`, async () => {
+				let frogs = [];
+				for(let i = 0; i < NUM_FROGS; i++) {
+					frogs[i] = Math.random() + "";
+				}
+				return frogs;
+			}],
+			["marry every single frog", async frogs => {
+				for(let i = 0; i < frogs.length; i++) {
+					frogs[i] = "married frog " + frogs[i];
+				}
+				return frogs;
+			}],
+		]);
+
+		expect(result.current.stepIndex).to.equal(0);
+		expect(result.current.complete).to.equal(false);
+		await waitForNextUpdate();
+		expect(result.current.stepIndex).to.equal(1);
+		expect(result.current.step).to.equal("marry every single frog");
+		expect(result.current.complete).to.equal(true);
+		expect(result.current.output.length).to.equal(NUM_FROGS);
 	});
 });

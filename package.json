@@ -1,29 +1,29 @@
 {
-  "name": "react-processor",
-  "types": "build/index.d.ts",
+  "name": "react-processor-hook",
+	"types": "lib/index.d.ts",
+	"files": ["lib/**/*"],
   "version": "1.0.0",
   "description": "A React hook for step-based asynchronous data processing.",
-  "main": "build/index.js",
+  "main": "lib/index.js",
   "dependencies": {
     "react": "^16.11.0"
   },
   "devDependencies": {
+    "@testing-library/react-hooks": "^3.1.1",
     "@types/chai": "^4.2.4",
-    "@types/enzyme": "^3.10.3",
-    "@types/enzyme-adapter-react-16": "^1.0.5",
     "@types/mocha": "^5.2.7",
+    "@types/node": "^12.11.7",
     "@types/react": "^16.9.11",
     "chai": "^4.2.0",
-    "enzyme": "^3.10.0",
-    "enzyme-adapter-react-16": "^1.15.1",
-    "jsdom": "^15.2.0",
-    "jsdom-global": "^3.0.2",
     "mocha": "^6.2.2",
     "react-dom": "^16.11.0",
+    "react-test-renderer": "^16.11.0",
     "ts-node": "^8.4.1",
     "typescript": "^3.6.4"
   },
   "scripts": {
+		"prepare": "npm run build",
+		"prepublishOnly": "npm test",
     "test": "mocha",
     "build": "tsc"
   },

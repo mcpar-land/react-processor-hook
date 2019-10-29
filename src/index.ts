@@ -1,9 +1,10 @@
 import React, {useReducer, useEffect} from 'react';
 
-type ProcessorFunction = (input: any) => Promise<any>;
+export type StepFunction = (input?: any) => Promise<any>;
 
-type Step = [string, ProcessorFunction];
+export type Step = [string, StepFunction];
 export type StepArray = Step[];
+
 
 export interface ProcessorState {
 	output: any | undefined,
@@ -13,20 +14,19 @@ export interface ProcessorState {
 	stepIndex: number
 };
 
-type ProcessorActionType = 'error' | 'next' | 'complete';
-interface ProcessorAction{
+export type ProcessorActionType = 'error' | 'next' | 'complete';
+export interface ProcessorAction{
 	type: ProcessorActionType,
 	error?: Error,
 	output?: any
 };
 
-export const useProcessor = (input: any, processors: StepArray) : [
-	any | undefined,
-	boolean,
-	Error | undefined,
-	string,
-	number
-] => {
+/**
+ * 
+ * @param input The starting input 
+ * @param processors 
+ */
+export const useProcessor = (processors: StepArray, input?: any) : ProcessorState => {
 
 	const initialState: ProcessorState = {
 		output: undefined,
@@ -39,19 +39,19 @@ export const useProcessor = (input: any, processors: StepArray) : [
 	const reducer: React.Reducer<ProcessorState, ProcessorAction> = (state, action) => {
 		switch(action.type) {
 			case 'error': return {
-				complete: false,
+				...state,
+				complete: true,
 				error: action.error,
-				...state
 			};
 			case 'next': return {
+				...state,
 				stepIndex: state.stepIndex+1,
 				step: processors[state.stepIndex+1][0],
-				...state
 			};
 			case 'complete': return {
+				...state,
 				complete: true,
 				output: action.output,
-				...state
 			}
 			default: return state;
 		}
@@ -63,8 +63,9 @@ export const useProcessor = (input: any, processors: StepArray) : [
 		currentData: any,
 		processor: Step
 	): Promise<any> => {
-		console.log('doing step ', processor[0]);
+		console.log('doing step', processor[0]);
 		const newOutput = await processor[1](currentData);
+		console.log(newOutput);
 		return newOutput;
 	}
 
@@ -79,6 +80,7 @@ export const useProcessor = (input: any, processors: StepArray) : [
 			} catch(err) {
 				dispatch({type: 'error', error: err});
 				didError = true;
+				console.log(err);
 				break;
 			}
 		}
@@ -88,15 +90,8 @@ export const useProcessor = (input: any, processors: StepArray) : [
 	};
 
 	useEffect(() => {
-		console.log(state.error);
 		processorChain();
 	}, []);
 
-	return [
-		state.output,
-		state.complete,
-		state.error,
-		state.step,
-		state.stepIndex
-	];
+	return state;
 }
