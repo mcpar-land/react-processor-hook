@@ -63,9 +63,7 @@ export const useProcessor = (processors: StepArray, input?: any) : ProcessorStat
 		currentData: any,
 		processor: Step
 	): Promise<any> => {
-		console.log('doing step', processor[0]);
 		const newOutput = await processor[1](currentData);
-		console.log(newOutput);
 		return newOutput;
 	}
 

@@ -24,12 +24,18 @@
   "scripts": {
 		"prepare": "npm run build",
 		"prepublishOnly": "npm test",
+		"version": "git add -A src",
+		"postversion": "git push && git push --tags",
     "test": "mocha",
     "build": "tsc"
   },
   "keywords": [
     "react"
-  ],
+	],
+	"repository": {
+		"type" : "git",
+		"url": "git+https://github.com/mcpar-land/react-processor-hook.git"
+	},
   "author": "mcpar-land",
   "license": "ISC"
 }
