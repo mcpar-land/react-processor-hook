@@ -1,4 +1,4 @@
-# `react-use-processor`
+# `react-processor-hook`
 
 `useProcessor` is a React hook for processing data in steps, and exposing the currently calculating step as a state.
 
@@ -60,4 +60,43 @@ const TweetLoader = (props) => {
 }
 
 export default TweetLoader;
+```
+
+
+The function takes an array of asynchronous methods, optionally with names.
+```JSX
+
+const {
+  output,
+  complete,
+  error,
+  step,
+  stepIndex
+} = useProcessor([
+  async () => {
+    //
+    // ...
+    //
+    return dataOne;
+  },
+  ["Named step", async dataOne => {
+    //
+    // ...
+    //
+    return dataTwo;
+  }],
+  async dataTwo => {
+    //
+    // ...
+    //
+    return dataThree
+  },
+  ["Another named step", async dataThree => {
+    //
+    // ...
+    //
+    return dataFour
+  }]
+]);
+
 ```

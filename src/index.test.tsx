@@ -4,6 +4,7 @@ import { HookResult, renderHook, act } from '@testing-library/react-hooks';
 import {
 	StepArray,
 	ProcessorState,
+	ProcessorArray,
 	useProcessor
 } from '.';
 
@@ -25,21 +26,21 @@ describe("useProcessor", () => {
 		loadHook([
 			["kiss frog", async frog => {
 				await pause(R_PAUSE);
-				return "kissed frog"
+				return "kissed "+frog;
 			}],
 			["turn frog into prince", async frog => {
 				await pause(R_PAUSE);
-				return "prince"
+				return "prince";
 			}],
 			["marry prince", async prince => {
 				await pause(R_PAUSE);
-				return "married prince"
+				return "married "+prince;
 			}],
 			["divorce prince", async prince => {
 				await pause(R_PAUSE);
-				return "divorced prince"
+				return "divorced prince";
 			}]
-		]);
+		], "frog");
 		
 		expect(result.current.stepIndex).to.equal(0);
 		expect(result.current.step).to.equal("kiss frog");
@@ -62,25 +63,66 @@ describe("useProcessor", () => {
 		expect(result.current.complete).to.equal(true);
 	});
 
+	it("should work with unnamed steps", async () => {
+		loadHook([
+			async frog => {
+				await pause(R_PAUSE);
+				return "kissed frog";
+			},
+			async frog => {
+				await pause(R_PAUSE);
+				return "prince";
+			},
+			["marry prince", async prince => {
+				await pause(R_PAUSE);
+				return "married "+prince;
+			}],
+			async prince => {
+				await pause(R_PAUSE);
+				return "divorced "+prince.split(" ")[1];
+			}
+		]);
+		
+		expect(result.current.stepIndex).to.equal(0);
+		expect(result.current.step).to.equal("");
+		expect(result.current.complete).to.equal(false);
+		await waitForNextUpdate();
+		expect(result.current.stepIndex).to.equal(1);
+		expect(result.current.step).to.equal("");
+		expect(result.current.complete).to.equal(false);
+		await waitForNextUpdate();
+		expect(result.current.stepIndex).to.equal(2);
+		expect(result.current.step).to.equal("marry prince");
+		expect(result.current.complete).to.equal(false);
+		await waitForNextUpdate();
+		expect(result.current.stepIndex).to.equal(3);
+		expect(result.current.step).to.equal("");
+		expect(result.current.complete).to.equal(false);
+		await waitForNextUpdate();
+		expect(result.current.stepIndex).to.equal(3);
+		expect(result.current.step).to.equal("");
+		expect(result.current.complete).to.equal(true);
+	})
+
 	it("should stop at any error", async () => {
 
 		loadHook([
 			["kiss frog", async frog => {
 				await pause(R_PAUSE);
-				return "kissed frog"
+				return "kissed frog";
 			}],
 			["turn frog into prince", async frog => {
 				await pause(R_PAUSE);
-				return "prince"
+				return "prince";
 			}],
 			["marry prince", async prince => {
 				await pause(R_PAUSE);
 				throw new Error("prince already married");
-				return "married prince"
+				return "married prince";
 			}],
 			["divorce prince", async prince => {
 				await pause(R_PAUSE);
-				return "divorced prince"
+				return "divorced prince";
 			}]
 		]);
 
@@ -130,4 +172,50 @@ describe("useProcessor", () => {
 		expect(result.current.complete).to.equal(true);
 		expect(result.current.output.length).to.equal(NUM_FROGS);
 	});
+
+	// it.skip("array()", async () => {
+	// 	loadHook([
+	// 		["kiss frog", async frog => {
+	// 			await pause(R_PAUSE);
+	// 			return "kissed frog";
+	// 		}],
+	// 		["turn frog into prince", async frog => {
+	// 			await pause(R_PAUSE);
+	// 			return "prince";
+	// 		}],
+	// 		["marry prince", async prince => {
+	// 			await pause(R_PAUSE);
+	// 			throw new Error("prince already married");
+	// 			return "married prince";
+	// 		}],
+	// 		["divorce prince", async prince => {
+	// 			await pause(R_PAUSE);
+	// 			return "divorced prince";
+	// 		}]
+	// 	]);
+
+	// 	let [
+	// 		myOutput,
+	// 		myComplete,
+	// 		myError,
+	// 		myStep,
+	// 		myStepIndex
+	// 	] = result.current.array();
+
+	// 	expect(myStepIndex).to.equal(0);
+	// 	expect(myStep).to.equal("kiss frog");
+	// 	expect(myComplete).to.equal(false);
+	// 	await waitForNextUpdate();
+	// 	[
+	// 		myOutput,
+	// 		myComplete,
+	// 		myError,
+	// 		myStep,
+	// 		myStepIndex
+	// 	] = result.current.array();
+	// 	expect(myStepIndex).to.equal(1);
+	// 	expect(myStep).to.equal("turn frog into prince");
+	// 	expect(myComplete).to.equal(false);
+
+	// });
 });

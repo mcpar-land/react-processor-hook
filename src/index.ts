@@ -2,9 +2,8 @@ import React, {useReducer, useEffect} from 'react';
 
 export type StepFunction = (input?: any) => Promise<any>;
 
-export type Step = [string, StepFunction];
+export type Step = [string, StepFunction] | StepFunction;
 export type StepArray = Step[];
-
 
 export interface ProcessorState {
 	output: any | undefined,
@@ -14,6 +13,14 @@ export interface ProcessorState {
 	stepIndex: number
 };
 
+export type ProcessorArray = [
+	any | undefined,
+	boolean,
+	Error | undefined,
+	string,
+	number
+];
+
 export type ProcessorActionType = 'error' | 'next' | 'complete';
 export interface ProcessorAction{
 	type: ProcessorActionType,
@@ -21,12 +28,22 @@ export interface ProcessorAction{
 	output?: any
 };
 
+const stepFunc = (step: Step): StepFunction => {
+	if(Array.isArray(step)) return step[1];
+	else return step;
+}
+
+const stepName = (step: Step): string => {
+	if(Array.isArray(step)) return step[0];
+	else return "";
+}
+
 /**
  * 
  * @param input The starting input 
- * @param processors 
+ * @param stepArray 
  */
-export const useProcessor = (processors: StepArray, input?: any) : ProcessorState => {
+export const useProcessor = (stepArray: Step[], input?: any) : ProcessorState => {
 
 	const initialState: ProcessorState = {
 		output: undefined,
@@ -46,7 +63,7 @@ export const useProcessor = (processors: StepArray, input?: any) : ProcessorStat
 			case 'next': return {
 				...state,
 				stepIndex: state.stepIndex+1,
-				step: processors[state.stepIndex+1][0],
+				step: stepName(stepArray[state.stepIndex+1]),
 			};
 			case 'complete': return {
 				...state,
@@ -59,26 +76,25 @@ export const useProcessor = (processors: StepArray, input?: any) : ProcessorStat
 
 	const [state, dispatch] = useReducer(reducer, initialState);
 
-	const doProcessor = async (
+	const doStep = async (
 		currentData: any,
-		processor: Step
+		step: Step
 	): Promise<any> => {
-		const newOutput = await processor[1](currentData);
+		const newOutput = await stepFunc(step)(currentData);
 		return newOutput;
 	}
 
 	const processorChain = async () => {
 		let currentData = input;
 		let didError = false;
-		for(let i = 0; i < processors.length; i++) {
-			const processor = processors[i];
+		for(let i = 0; i < stepArray.length; i++) {
+			const step = stepArray[i];
 			dispatch({type: 'next'});
 			try {
-				currentData = await doProcessor(currentData, processor);
+				currentData = await doStep(currentData, step);
 			} catch(err) {
 				dispatch({type: 'error', error: err});
 				didError = true;
-				console.log(err);
 				break;
 			}
 		}
@@ -91,5 +107,7 @@ export const useProcessor = (processors: StepArray, input?: any) : ProcessorStat
 		processorChain();
 	}, []);
 
-	return state;
+	return {
+		...state
+	};
 }
