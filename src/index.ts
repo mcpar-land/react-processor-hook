@@ -1,15 +1,29 @@
-import React, {useReducer, useEffect} from 'react';
+import React, { useReducer, useEffect } from 'react';
 
+/**
+ * @param input The output of the previous step. Is `undefined` on the first step.
+ */
 export type StepFunction = (input?: any) => Promise<any>;
 
 export type Step = [string, StepFunction] | StepFunction;
 export type StepArray = Step[];
 
 export interface ProcessorState {
+	/**
+	 * The final output of a Processor hook.
+	 * 
+	 * Equals `undefined` until all steps complete successfully.
+	 * 
+	 * Will equal `undefined` if a step encounters an error.
+	 */
 	output: any | undefined,
+	/** Returns `true` when either all steps are complete, or if an error occurs. */
 	complete: boolean,
+	/** Equals `undefined` until a step encounters an error. */
 	error: Error | undefined,
+	/** The name of the step currently executing. */
 	step: string,
+	/** The index of the step currently executing. */
 	stepIndex: number
 };
 
@@ -22,7 +36,7 @@ export type ProcessorArray = [
 ];
 
 export type ProcessorActionType = 'error' | 'next' | 'complete';
-export interface ProcessorAction{
+export interface ProcessorAction {
 	type: ProcessorActionType,
 	error?: Error,
 	output?: any
@@ -54,7 +68,7 @@ export const useProcessor = (stepArray: Step[], input?: any) : ProcessorState =>
 	};
 
 	const reducer: React.Reducer<ProcessorState, ProcessorAction> = (state, action) => {
-		switch(action.type) {
+		switch (action.type) {
 			case 'error': return {
 				...state,
 				complete: true,
@@ -98,8 +112,8 @@ export const useProcessor = (stepArray: Step[], input?: any) : ProcessorState =>
 				break;
 			}
 		}
-		if(!didError) {
-			dispatch({type: 'complete', output: currentData});
+		if (!didError) {
+			dispatch({ type: 'complete', output: currentData });
 		}
 	};
 
