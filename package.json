@@ -4,7 +4,7 @@
   "files": [
     "lib/**/*"
   ],
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A React hook for step-based asynchronous data processing.",
   "main": "lib/index.js",
   "dependencies": {
