@@ -40,7 +40,7 @@ describe("useProcessor", () => {
 				return "divorced prince"
 			}]
 		]);
-		
+
 		expect(result.current.stepIndex).to.equal(0);
 		expect(result.current.step).to.equal("kiss frog");
 		expect(result.current.complete).to.equal(false);
@@ -101,7 +101,7 @@ describe("useProcessor", () => {
 		expect(result.current.complete).to.equal(true);
 		expect((result.current.error as Error).message)
 			.to.equal("prince already married");
-		
+
 	});
 
 	it("should work with large data", async () => {
@@ -109,13 +109,13 @@ describe("useProcessor", () => {
 		loadHook([
 			[`create ${NUM_FROGS} frogs`, async () => {
 				let frogs = [];
-				for(let i = 0; i < NUM_FROGS; i++) {
+				for (let i = 0; i < NUM_FROGS; i++) {
 					frogs[i] = Math.random() + "";
 				}
 				return frogs;
 			}],
 			["marry every single frog", async frogs => {
-				for(let i = 0; i < frogs.length; i++) {
+				for (let i = 0; i < frogs.length; i++) {
 					frogs[i] = "married frog " + frogs[i];
 				}
 				return frogs;
